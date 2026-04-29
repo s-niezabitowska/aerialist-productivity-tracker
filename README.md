@@ -1,4 +1,5 @@
 **Aerialist | The Choreography of Tasks**
+
 Aerialist is a focused productivity application designed to help users navigate their daily tasks with the grace and precision of a stage performance. By combining a minimalist Glassmorphic UI with a robust Firebase backend, it offers a seamless, cloud-synced experience for deep work.
 
 **Features**
