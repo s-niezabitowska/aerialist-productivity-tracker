@@ -5,7 +5,8 @@
 
 import { auth, db } from './firebase-config.js';
 import { 
-    onAuthStateChanged, signOut 
+    onAuthStateChanged, signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, signOut 
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { 
     doc, setDoc, getDoc 
@@ -13,10 +14,18 @@ import {
 
 // --- 1. DOM ELEMENTS ---
 const elements = {
-    // UI Layout
+    // Auth Components
     authOverlay: document.getElementById('auth-overlay'),
     mainDashboard: document.getElementById('main-dashboard'),
+    authError: document.getElementById('auth-error'),
     userGreeting: document.getElementById('user-greeting'),
+    signupFields: document.getElementById('signup-fields'),
+    
+    // Auth Inputs
+    emailInput: document.getElementById('email'),
+    passwordInput: document.getElementById('password'),
+    firstNameInput: document.getElementById('first-name'),
+    surnameInput: document.getElementById('surname'),
     
     // Quick Capture (Sidebar)
     actInput: document.getElementById('act-input'),
@@ -109,6 +118,12 @@ async function loadUserData(uid) {
 }
 
 // --- 5. TASK LOGIC (CAPTURE & EDIT) ---
+// Utility to flip yyyy-mm-dd to dd-mm-yyyy
+function formatDisplayDate(dateStr) {
+    if (!dateStr || dateStr === "Asap") return "Asap";
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
+}
 
 function handleNewTask() {
     const taskName = elements.actInput.value.trim();
@@ -162,7 +177,7 @@ function createActElement(act, index) {
             <span class="act-title">${act.text}</span>
             <div class="act-meta">
                 <span class="act-priority-badge">${act.priority}</span>
-                <span class="act-date-badge">🗓️ ${act.dueDate}</span>
+                <span class="act-date-badge">🗓️ ${formatDisplayDate(act.dueDate)}</span>
             </div>
         </div>
         <div class="act-actions">
@@ -221,7 +236,9 @@ function createActElement(act, index) {
 function updatePlaceholder() {
     const hasSpotlightTask = elements.spotlightArea.querySelector('.act-item');
     elements.placeholder.classList.toggle('hidden', !!hasSpotlightTask);
-    if (!hasSpotlightTask) elements.spotlightArea.appendChild(elements.placeholder);
+    if (!hasSpotlightTask && !elements.spotlightArea.contains(elements.placeholder)) {
+        elements.spotlightArea.appendChild(elements.placeholder);
+    }
 }
 
 // --- 6. MODAL ACTIONS ---
@@ -273,7 +290,51 @@ function toggleTimer() {
     isTimerRunning = !isTimerRunning;
 }
 
-// --- 8. EVENT LISTENERS ---
+// --- 8. EVENT LISTENERS & AUTH ---
+
+// Toggle Login/Signup
+document.getElementById('signup-toggle').addEventListener('click', () => {
+    const isLoggingIn = elements.signupFields.classList.contains('hidden');
+    elements.signupFields.classList.toggle('hidden');
+    document.getElementById('auth-title').innerText = isLoggingIn ? "New Performer" : "The Stage Door";
+    document.getElementById('login-btn').classList.toggle('hidden');
+    document.getElementById('signup-submit').classList.toggle('hidden');
+    document.getElementById('signup-toggle').innerText = isLoggingIn ? "BACK TO LOGIN" : "NEW USER";
+});
+
+// Login
+document.getElementById('login-btn').addEventListener('click', async () => {
+    const email = elements.emailInput.value;
+    const password = elements.passwordInput.value;
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        elements.authError.innerText = "Check your credentials and try again.";
+        elements.authError.classList.remove('hidden');
+    }
+});
+
+// Register
+document.getElementById('signup-submit').addEventListener('click', async () => {
+    const email = elements.emailInput.value;
+    const password = elements.passwordInput.value;
+    const firstName = elements.firstNameInput.value;
+    const surname = elements.surnameInput.value;
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+            firstName: firstName,
+            surname: surname,
+            acts: [],
+            landedCount: 0
+        });
+    } catch (error) {
+        elements.authError.innerText = error.message;
+        elements.authError.classList.remove('hidden');
+    }
+});
+
 elements.startBtn.addEventListener('click', toggleTimer);
 elements.resetBtn.addEventListener('click', () => {
     clearInterval(timerInterval);
