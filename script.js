@@ -1,152 +1,98 @@
 /**
- * Aerialist Logic: Updated for Accessibility & Custom Timer
+ * Aerialist Logic: Task Overhaul - Stage 3 (Modal Editing & Sidebar)
+ * Organized by functional blocks for clarity and scalability.
  */
 
 import { auth, db } from './firebase-config.js';
 import { 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut 
+    onAuthStateChanged, signOut 
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-
 import { 
-    doc, 
-    setDoc, 
-    getDoc 
+    doc, setDoc, getDoc 
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-// DOM ELEMENTS
-const authOverlay = document.getElementById('auth-overlay');
-const mainDashboard = document.getElementById('main-dashboard');
-const authError = document.getElementById('auth-error');
-const userGreeting = document.getElementById('user-greeting');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const firstNameInput = document.getElementById('first-name');
-const surnameInput = document.getElementById('surname');
-const signupFields = document.getElementById('signup-fields');
-const loginBtn = document.getElementById('login-btn');
-const signupToggle = document.getElementById('signup-toggle');
-const signupSubmit = document.getElementById('signup-submit');
-const backToLogin = document.getElementById('back-to-login');
-const logoutBtn = document.getElementById('logout-btn');
-const actInput = document.getElementById('act-input');
-const actList = document.getElementById('act-list');
-const spotlightArea = document.getElementById('spotlight-area');
-const placeholder = document.getElementById('spotlight-placeholder');
-const archiveList = document.getElementById('archive-list');
-const archiveSection = document.getElementById('archive-section');
-const landedCountDisplay = document.getElementById('landed-count');
-const timerDisplay = document.getElementById('timer-display');
-const startBtn = document.getElementById('start-btn');
-const resetBtn = document.getElementById('reset-btn');
-const timerContainer = document.querySelector('.timer-container');
-const customTimeBtn = document.getElementById('custom-time-btn'); // New Reference
+// --- 1. DOM ELEMENTS ---
+const elements = {
+    // UI Layout
+    authOverlay: document.getElementById('auth-overlay'),
+    mainDashboard: document.getElementById('main-dashboard'),
+    userGreeting: document.getElementById('user-greeting'),
+    
+    // Quick Capture (Sidebar)
+    actInput: document.getElementById('act-input'),
+    dueDateInput: document.getElementById('due-date'),
+    priorityInput: document.getElementById('priority-level'),
+    addTaskBtn: document.getElementById('add-task-btn'),
+    
+    // Task Lists
+    actList: document.getElementById('act-list'),
+    spotlightArea: document.getElementById('spotlight-area'),
+    placeholder: document.getElementById('spotlight-placeholder'),
+    archiveList: document.getElementById('archive-list'),
+    archiveSection: document.getElementById('archive-section'),
+    landedCountDisplay: document.getElementById('landed-count'),
+    
+    // Edit Modal
+    editModal: document.getElementById('edit-modal'),
+    editActInput: document.getElementById('edit-act-input'),
+    editDueDateInput: document.getElementById('edit-due-date'),
+    editPriorityInput: document.getElementById('edit-priority-level'),
+    saveEditBtn: document.getElementById('save-edit-btn'),
+    closeModalBtn: document.getElementById('close-modal-btn'),
+    
+    // Timer
+    timerDisplay: document.getElementById('timer-display'),
+    startBtn: document.getElementById('start-btn'),
+    resetBtn: document.getElementById('reset-btn'),
+    timerContainer: document.querySelector('.timer-container'),
+    customTimeBtn: document.getElementById('custom-time-btn')
+};
 
-// APP STATE
-let currentUser = null;
-let landedCount = 0;
-let acts = [];
+// --- 2. APP STATE ---
+let state = {
+    currentUser: null,
+    landedCount: 0,
+    acts: [],
+    editingId: null // Tracks which task is currently in the "Dressing Room" modal
+};
 
-// AUTHENTICATION & UI FLOW[cite: 10]
+let timerInterval;
+let timeLeft = 25 * 60;
+let isTimerRunning = false;
+
+// --- 3. AUTHENTICATION & UI ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        currentUser = user;
-        await loadUserData(user.uid); 
+        state.currentUser = user;
+        await loadUserData(user.uid);
         toggleUI(true);
     } else {
-        currentUser = null;
+        state.currentUser = null;
         toggleUI(false);
     }
 });
 
 function toggleUI(isLoggedIn) {
-    if (isLoggedIn) {
-        authOverlay.classList.add('hidden');
-        mainDashboard.classList.remove('hidden');
-    } else {
-        authOverlay.classList.remove('hidden');
-        mainDashboard.classList.add('hidden');
-        if (userGreeting) userGreeting.innerText = ""; 
-        resetAppState();
-    }
+    elements.authOverlay.classList.toggle('hidden', isLoggedIn);
+    elements.mainDashboard.classList.toggle('hidden', !isLoggedIn);
+    if (!isLoggedIn) resetAppState();
 }
 
 function resetAppState() {
-    acts = [];
-    landedCount = 0;
+    state.acts = [];
+    state.landedCount = 0;
     renderActs();
 }
 
-// Signup/Login View Toggles[cite: 10]
-signupToggle.addEventListener('click', () => {
-    signupFields.classList.remove('hidden');
-    signupSubmit.classList.remove('hidden');
-    backToLogin.classList.remove('hidden');
-    signupToggle.classList.add('hidden');
-    loginBtn.classList.add('hidden');
-    document.getElementById('auth-title').innerText = "Join the Troupe";
-});
-
-backToLogin.addEventListener('click', () => {
-    signupFields.classList.add('hidden');
-    signupSubmit.classList.add('hidden');
-    backToLogin.classList.add('hidden');
-    signupToggle.classList.remove('hidden');
-    loginBtn.classList.remove('hidden');
-    document.getElementById('auth-title').innerText = "The Stage Door";
-});
-
-// Firebase Auth Actions[cite: 10]
-loginBtn.addEventListener('click', async () => {
-    try {
-        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    } catch (error) {
-        authError.innerText = "The stage door is locked. Check your credentials.";
-        authError.classList.remove('hidden');
-    }
-});
-
-signupSubmit.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-    const fName = firstNameInput.value.trim();
-    const sName = surnameInput.value.trim();
-
-    if (!fName || !sName || password.length < 6) {
-        authError.innerText = "Please provide your name and a 6-character passphrase.";
-        authError.classList.remove('hidden');
-        return;
-    }
-
-    try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCred.user.uid), {
-            firstName: fName,
-            surname: sName,
-            acts: [],
-            landedCount: 0
-        });
-    } catch (error) {
-        authError.innerText = error.message;
-        authError.classList.remove('hidden');
-    }
-});
-
-logoutBtn.addEventListener('click', () => signOut(auth));
-
-// CLOUD PERSISTENCE[cite: 10]
+// --- 4. CLOUD PERSISTENCE ---
 async function saveState() {
-    if (!currentUser) return;
+    if (!state.currentUser) return;
     try {
-        await setDoc(doc(db, "users", currentUser.uid), { 
-            acts: acts, 
-            landedCount: landedCount 
+        await setDoc(doc(db, "users", state.currentUser.uid), { 
+            acts: state.acts, 
+            landedCount: state.landedCount 
         }, { merge: true });
-    } catch (e) {
-        console.error("Cloud Save Error: ", e);
-    }
+    } catch (e) { console.error("Cloud Save Error:", e); }
 }
 
 async function loadUserData(uid) {
@@ -154,169 +100,198 @@ async function loadUserData(uid) {
         const docSnap = await getDoc(doc(db, "users", uid));
         if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.firstName && userGreeting) {
-                userGreeting.innerText = `Welcome, ${data.firstName}`;
-            }
-            acts = data.acts || [];
-            landedCount = data.landedCount || 0;
+            if (data.firstName) elements.userGreeting.innerText = `Welcome, ${data.firstName}`;
+            state.acts = data.acts || [];
+            state.landedCount = data.landedCount || 0;
             renderActs(); 
         }
-    } catch (e) {
-        console.error("Cloud Load Error: ", e);
-    }
+    } catch (e) { console.error("Cloud Load Error:", e); }
 }
 
-// CORE TASK LOGIC[cite: 10]
-function renderActs() {
-    actList.innerHTML = '';
-    spotlightArea.innerHTML = '';
-    archiveList.innerHTML = '';
-    spotlightArea.appendChild(placeholder);
-    acts.forEach((act, index) => createActElement(act, index));
-    landedCountDisplay.innerText = landedCount;
-    if (landedCount > 0) archiveSection.classList.remove('hidden');
-    updatePlaceholder();
-}
+// --- 5. TASK LOGIC (CAPTURE & EDIT) ---
 
-actInput.addEventListener('keypress', (e) => {
-    const val = actInput.value.trim();
-    if (e.key === 'Enter' && val !== "") {
-        acts.push({
-            text: val,
-            statusText: "ACTIVE",
+function handleNewTask() {
+    const taskName = elements.actInput.value.trim();
+    const dueDate = elements.dueDateInput.value;
+    const priority = elements.priorityInput.value;
+
+    if (taskName) {
+        state.acts.push({
+            text: taskName,
+            dueDate: dueDate || "Asap", // Logic determines "Asap" if date is empty
+            priority: priority,
             isFocused: false,
-            isArchived: false
+            isArchived: false,
+            id: Date.now()
         });
-        actInput.value = "";
+        
+        elements.actInput.value = "";
+        elements.dueDateInput.value = "";
+        elements.priorityInput.value = "medium";
+        
         saveState();
         renderActs();
     }
-});
+}
 
-// ACCESSIBILITY UPDATE: Dynamic buttons now include ARIA labels[cite: 9, 10]
+function renderActs() {
+    elements.actList.innerHTML = '';
+    elements.spotlightArea.innerHTML = '';
+    elements.archiveList.innerHTML = '';
+    
+    state.acts.forEach((act, index) => {
+        const li = createActElement(act, index);
+        if (act.isArchived) elements.archiveList.prepend(li);
+        else if (act.isFocused) elements.spotlightArea.appendChild(li);
+        else elements.actList.appendChild(li);
+    });
+    
+    updatePlaceholder();
+    elements.landedCountDisplay.innerText = state.landedCount;
+    elements.archiveSection.classList.toggle('hidden', state.landedCount === 0);
+}
+
 function createActElement(act, index) {
     const li = document.createElement('li');
-    li.className = 'act-item';
+    li.className = `act-item priority-${act.priority}`;
     if (act.isFocused) li.classList.add('in-flight');
     if (act.isArchived) li.classList.add('archived-item');
 
     li.innerHTML = `
         <div class="act-content">
             <span class="act-title">${act.text}</span>
-            <span class="act-status">${act.statusText}</span>
+            <div class="act-meta">
+                <span class="act-priority-badge">${act.priority}</span>
+                <span class="act-date-badge">🗓️ ${act.dueDate}</span>
+            </div>
         </div>
-        ${!act.isArchived ? `
         <div class="act-actions">
-            <button class="complete-btn" title="Complete" aria-label="Mark task as complete">✓</button>
-            <button class="focus-btn" title="Focus" aria-label="${act.isFocused ? 'Remove focus' : 'Focus task'}">${act.isFocused ? '✦' : '✧'}</button>
-            <button class="land-btn" title="Remove" aria-label="Delete task">—</button>
-        </div>` : ''}
+            ${!act.isArchived ? `
+                <button class="edit-btn" title="Edit">✎</button>
+                <button class="complete-btn" title="Complete">✓</button>
+                <button class="focus-btn" title="Focus">${act.isFocused ? '✦' : '✧'}</button>
+                <button class="land-btn" title="Remove">—</button>
+            ` : `
+                <button class="undo-btn" title="Undo">⟲</button>
+            `}
+        </div>
     `;
 
-    li.querySelector('.focus-btn')?.addEventListener('click', () => {
-        const wasFocused = act.isFocused;
-        acts.forEach(a => a.isFocused = false);
-        act.isFocused = !wasFocused;
+    // Edit Logic (Opens Modal)
+    li.querySelector('.edit-btn')?.addEventListener('click', () => {
+        state.editingId = act.id;
+        elements.editActInput.value = act.text;
+        elements.editDueDateInput.value = act.dueDate === "Asap" ? "" : act.dueDate;
+        elements.editPriorityInput.value = act.priority;
+        elements.editModal.classList.remove('hidden');
+    });
+
+    li.querySelector('.undo-btn')?.addEventListener('click', () => {
+        state.landedCount--;
+        act.isArchived = false;
         saveState();
         renderActs();
+    });
+    
+    li.querySelector('.focus-btn')?.addEventListener('click', () => {
+        const wasFocused = act.isFocused;
+        state.acts.forEach(a => a.isFocused = false);
+        act.isFocused = !wasFocused;
+        saveState(); renderActs();
     });
 
     li.querySelector('.land-btn')?.addEventListener('click', () => {
         li.classList.add('landing');
-        setTimeout(() => {
-            acts.splice(index, 1);
-            saveState();
-            renderActs();
-        }, 600);
+        setTimeout(() => { state.acts.splice(index, 1); saveState(); renderActs(); }, 600);
     });
 
     li.querySelector('.complete-btn')?.addEventListener('click', () => {
         li.classList.add('completed-animation');
-        setTimeout(() => {
-            landedCount++;
-            act.isArchived = true;
-            act.isFocused = false;
-            saveState();
-            renderActs();
+        setTimeout(() => { 
+            state.landedCount++; 
+            act.isArchived = true; 
+            act.isFocused = false; 
+            saveState(); renderActs(); 
         }, 500);
     });
 
-    if (act.isArchived) archiveList.prepend(li);
-    else if (act.isFocused) spotlightArea.appendChild(li);
-    else actList.appendChild(li);
+    return li;
 }
 
 function updatePlaceholder() {
-    const hasTask = spotlightArea.querySelector('.act-item');
-    placeholder.classList.toggle('hidden', !!hasTask);
+    const hasSpotlightTask = elements.spotlightArea.querySelector('.act-item');
+    elements.placeholder.classList.toggle('hidden', !!hasSpotlightTask);
+    if (!hasSpotlightTask) elements.spotlightArea.appendChild(elements.placeholder);
 }
 
-// TIMER LOGIC
-let timer;
-let timeLeft = 25 * 60;
-let isRunning = false;
+// --- 6. MODAL ACTIONS ---
+elements.saveEditBtn.addEventListener('click', () => {
+    const taskIndex = state.acts.findIndex(a => a.id === state.editingId);
+    if (taskIndex !== -1) {
+        state.acts[taskIndex].text = elements.editActInput.value.trim();
+        state.acts[taskIndex].dueDate = elements.editDueDateInput.value || "Asap";
+        state.acts[taskIndex].priority = elements.editPriorityInput.value;
+        
+        state.editingId = null;
+        elements.editModal.classList.add('hidden');
+        saveState();
+        renderActs();
+    }
+});
 
+elements.closeModalBtn.addEventListener('click', () => {
+    elements.editModal.classList.add('hidden');
+    state.editingId = null;
+});
+
+// --- 7. TIMER LOGIC ---
 function updateTimerDisplay() {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
-    timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    elements.timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// Preset button handlers
-document.querySelectorAll('.preset-btn[data-time]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (isRunning) return; // Prevent changing time during active flight
-        timeLeft = parseInt(btn.getAttribute('data-time')) * 60;
-        updateTimerDisplay();
-    });
-});
-
-// Custom time handler[cite: 9]
-customTimeBtn.addEventListener('click', () => {
-    if (isRunning) return;
-    const minutes = prompt("Enter custom duration (minutes):", "25");
-    if (minutes && !isNaN(minutes) && minutes > 0) {
-        timeLeft = Math.floor(parseFloat(minutes)) * 60;
-        updateTimerDisplay();
-    }
-});
-
-startBtn.addEventListener('click', () => {
-    if (isRunning) {
-        clearInterval(timer);
-        startBtn.textContent = "START TIMER";
-        timerContainer.classList.remove('active-flight');
-        isRunning = false;
+function toggleTimer() {
+    if (isTimerRunning) {
+        clearInterval(timerInterval);
+        elements.startBtn.textContent = "START TIMER";
+        elements.timerContainer.classList.remove('active-flight');
     } else {
-        isRunning = true;
-        startBtn.textContent = "PAUSE";
-        timerContainer.classList.add('active-flight');
-        timer = setInterval(() => {
+        elements.startBtn.textContent = "PAUSE";
+        elements.timerContainer.classList.add('active-flight');
+        timerInterval = setInterval(() => {
             timeLeft--;
             updateTimerDisplay();
             if (timeLeft <= 0) {
-                clearInterval(timer);
+                clearInterval(timerInterval);
                 new Audio('https://assets.mixkit.co/sfx/preview/mixkit-simple-notification-alert-2630.mp3').play();
-                startBtn.textContent = "START TIMER";
-                timerContainer.classList.remove('active-flight');
-                timeLeft = 25 * 60;
-                updateTimerDisplay();
-                isRunning = false;
+                isTimerRunning = false;
+                elements.startBtn.textContent = "START TIMER";
             }
         }, 1000);
     }
-});
+    isTimerRunning = !isTimerRunning;
+}
 
-resetBtn.addEventListener('click', () => {
-    // 1. Stop the clock
-    clearInterval(timer);
-    isRunning = false;
-    
-    // 2. Reset the state
-    startBtn.textContent = "START TIMER";
-    timerContainer.classList.remove('active-flight');
-    
-    // 3. Revert to 25 minutes (or your current default)
+// --- 8. EVENT LISTENERS ---
+elements.startBtn.addEventListener('click', toggleTimer);
+elements.resetBtn.addEventListener('click', () => {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
     timeLeft = 25 * 60;
     updateTimerDisplay();
+    elements.startBtn.textContent = "START TIMER";
+    elements.timerContainer.classList.remove('active-flight');
+});
+
+elements.addTaskBtn.addEventListener('click', handleNewTask);
+elements.actInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleNewTask(); });
+document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+document.querySelectorAll('.preset-btn[data-time]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (isTimerRunning) return;
+        timeLeft = parseInt(btn.getAttribute('data-time')) * 60;
+        updateTimerDisplay();
+    });
 });
