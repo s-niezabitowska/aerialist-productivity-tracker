@@ -1,42 +1,30 @@
-**Aerialist | The Choreography of Tasks**
+# Aerialist | The Choreography of Tasks
 
 Aerialist is a focused productivity application designed to help users navigate their daily tasks with the grace and precision of a stage performance. By combining a minimalist Glassmorphic UI with a robust Firebase backend, it offers a seamless, cloud-synced experience for deep work.
 
-**Features**
-The Stage Door (Auth): Secure user registration and login system that personalizes the dashboard experience.
+## Features
+- **Secure Authentication:** Personalised dashboard with Firebase-backed login.
+- **Center Stage Focus:** A dedicated UI element to highlight your single highest-priority "act."
+- **Real-time Sync:** Data persistence via Cloud Firestore for a seamless multi-device experience.
+- **Performance Timer:** Integrated Pomodoro-style timer with customisable intervals.
+- **Task Archive:** Automated logging of completed tasks to track your productivity "repertoire."
 
-The Spotlight: A dedicated space for "center stage" focus, allowing users to highlight a single priority act.
+## Tech Stack
+- **Frontend:** HTML5, CSS3 (Advanced Flexbox & Glassmorphism)
+- **Logic:** Vanilla JavaScript (ES6 Modules)
+- **BaaS:** Firebase Authentication & Cloud Firestore (NoSQL)
 
-Cloud Choreography: Real-time data persistence using Firestore, ensuring your task list (Acts) and progress (Landings) follow you across devices.  
 
-In-Flight Timer: An integrated Pomodoro-style timer with presets to manage work intervals effectively.
+## Installation
 
-The Gallery: An automated archive of successful "landings" to track completed tasks and daily productivity.
+To run this project locally, follow these steps:
 
-**Technical Stack**
-Frontend: HTML5, CSS3 (Advanced Flexbox & Backdrop-filters).
+1. **Clone the repository:**
+```bash
+   git clone [https://github.com/s-niezabitowska/aerialist-productivity-tracker.git](https://github.com/s-niezabitowska/aerialist-productivity-tracker.git)
+   cd aerialist-productivity-tracker
+```
 
-Logic: Modern JavaScript (ES6 Modules).
-
-Backend as a Service:
-
-Firebase Authentication: Secure email/password handling.
-
-Cloud Firestore: NoSQL document database for real-time state synchronization.
-
-**Getting Started**
-Clone the Repository:
-
-Bash
-git clone https://github.com/s-niezabitowska/aerialist-productivity-tracker.git
-Firebase Setup:
-
-Create a project at the Firebase Console.
-
-Enable Authentication (Email/Password) and Firestore Database.
-
-Replace the firebaseConfig object in script.js with your own project credentials.
-
-Launch:
-
-Open index.html using a local server (e.g., VS Code Live Server) to support ES6 Modules.
+## License
+Licensed under **CC BY-NC 4.0**. 
+*Note: This project is available for personal and educational use. Commercial use is strictly prohibited without prior authorization.*
