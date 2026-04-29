@@ -1,31 +1,31 @@
 /**
- * Aerialist Logic: The Choreography of Tasks (Cloud Edition)
+ * Aerialist Logic: The Choreography of Tasks
+ * Refactored for Modular Firebase Config
  */
 
-// 1. FIREBASE INITIALIZATION
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// 1. MODULE IMPORTS
+// Import the initialized instances from your local config file
+import { auth, db } from './firebase-config.js';
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDHyxnHHQN3T_j8fDeHTuVdNtqhBGUlVIA",
-    authDomain: "aerialist-productivity-tracker.firebaseapp.com",
-    projectId: "aerialist-productivity-tracker",
-    storageBucket: "aerialist-productivity-tracker.firebasestorage.app",
-    messagingSenderId: "328247369828",
-    appId: "1:328247369828:web:c12a5264b52c9be249bf71",
-    measurementId: "G-XGQLJTZ9NB"
-};
+// Import the functional tools directly from the Firebase CDN[cite: 1, 2]
+import { 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { 
+    doc, 
+    setDoc, 
+    getDoc 
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 // 2. DOM ELEMENTS
 const authOverlay = document.getElementById('auth-overlay');
 const mainDashboard = document.getElementById('main-dashboard');
 const authError = document.getElementById('auth-error');
-const userGreeting = document.getElementById('user-greeting'); // New location target
+const userGreeting = document.getElementById('user-greeting');
 
 // Auth Inputs
 const emailInput = document.getElementById('email');
@@ -60,7 +60,7 @@ let acts = [];
 
 // 4. AUTHENTICATION & UI FLOW
 
-// The Observer: Manages the session on refresh[cite: 9, 10]
+// The Observer: Manages the session and UI state[cite: 1]
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -152,7 +152,7 @@ logoutBtn.addEventListener('click', () => signOut(auth));
 async function saveState() {
     if (!currentUser) return;
     try {
-        // Use merge to preserve profile names while saving tasks[cite: 9]
+        // Update specific user document with current state[cite: 1]
         await setDoc(doc(db, "users", currentUser.uid), { 
             acts: acts, 
             landedCount: landedCount 
@@ -168,7 +168,6 @@ async function loadUserData(uid) {
         if (docSnap.exists()) {
             const data = docSnap.data();
             
-            // Grounded Greeting: Targets the area above the spotlight[cite: 9]
             if (data.firstName && userGreeting) {
                 userGreeting.innerText = `Welcome, ${data.firstName}`;
             }
