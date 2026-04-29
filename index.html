@@ -15,7 +15,6 @@
         </header>
         
         <div class="auth-form">
-            <!-- Registration Fields (First Name & Surname) -->
             <div id="signup-fields" class="hidden">
                 <div class="input-wrapper">
                     <label for="first-name" class="hidden">First Name</label>
@@ -27,7 +26,6 @@
                 </div>
             </div>
 
-            <!-- Credentials -->
             <div class="input-wrapper">
                 <label for="email" class="hidden">Email Address</label> 
                 <input type="email" id="email" placeholder="Email" required>
@@ -48,7 +46,7 @@
         </div>
     </div>
 
-    <!-- 2. MAIN DASHBOARD: Branding Header & Content -->
+    <!-- 2. MAIN DASHBOARD -->
     <div class="dashboard-container hidden" id="main-dashboard">
         <header class="header">
             <h1 class="logo">Aerialist</h1>
@@ -56,10 +54,9 @@
         </header>
 
         <main class="content">
-            <!-- GREETING LOCATION -->
             <p id="user-greeting" style="text-align: left; padding-left: 10px; margin-bottom: -15px;"></p>
 
-            <!-- SPOTLIGHT SECTION -->
+            <!-- SPOTLIGHT SECTION (Full Width) -->
             <section class="glass-panel spotlight-container">
                 <h2 class="section-title">Task Spotlight</h2>
                 <div id="spotlight-area">
@@ -70,36 +67,59 @@
                 </div>
             </section>
 
-            <!-- THE STAGE FLOOR: Interaction Area -->
+            <!-- THE STAGE FLOOR: Two-Column Layout -->
             <div class="lower-stage">
-                <!-- ACTIVE ACTS -->
+                <!-- LEFT COLUMN: Task List -->
                 <section class="glass-panel acts-container">
-                    <h2 class="section-title">To Do List</h2>
-                    <div class="input-wrapper">
-                        <label for="act-input" class="hidden">New Task</label>
-                        <input type="text" id="act-input" placeholder="Type your task here...">
-                    </div>
+                    <h2 class="section-title">Task List</h2>
                     <ul id="act-list"></ul>
                 </section>
 
-                <!-- TIMER -->
-                <section class="glass-panel timer-container">
-                    <h2 class="section-title">Pomodoro Timer</h2>
-                    <div class="timer-presets">
-                        <button class="preset-btn" data-time="25" aria-label="Set timer to 25 minutes">25</button>
-                        <button class="preset-btn" data-time="5" aria-label="Set timer to 5 minutes">5</button>
-                        <button class="preset-btn" data-time="15" aria-label="Set timer to 15 minutes">15</button>
-                        <button class="preset-btn" id="custom-time-btn" title="Set Custom Time" aria-label="Set custom timer duration">✎</button>
-                    </div>
-                    <div id="timer-display" aria-live="polite">25:00</div>
+                <!-- RIGHT COLUMN: Control Wing (Sidebar) -->
+                <div class="control-wing">
+                    <!-- NEW: Create A Task Container -->
+                    <section class="glass-panel task-entry-container">
+                        <h2 class="section-title">Create A Task</h2>
+                        <div class="task-entry-grid-vertical">
+                            <div class="input-wrapper">
+                                <label for="act-input" class="hidden">Task Name</label>
+                                <input type="text" id="act-input" placeholder="Task Name">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label-sm">Due</span>
+                                <input type="date" id="due-date">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label-sm">Priority</span>
+                                <select id="priority-level">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <button id="add-task-btn" class="aerial-btn mini" aria-label="Add Task">ADD TO TASK LIST</button>
+                        </div>
+                    </section>
+
+                    <!-- POMODORO TIMER -->
+                    <section class="glass-panel timer-container">
+                        <h2 class="section-title">Pomodoro Timer</h2>
+                        <div class="timer-presets">
+                            <button class="preset-btn" data-time="25" aria-label="Set timer to 25 minutes">25</button>
+                            <button class="preset-btn" data-time="5" aria-label="Set timer to 5 minutes">5</button>
+                            <button class="preset-btn" data-time="15" aria-label="Set timer to 15 minutes">15</button>
+                            <button class="preset-btn" id="custom-time-btn" title="Set Custom Time" aria-label="Set custom timer duration">✎</button>
+                        </div>
+                        <div id="timer-display" aria-live="polite">25:00</div>
                         <div class="timer-controls">
                             <button id="start-btn" class="aerial-btn">START TIMER</button>
                             <button id="reset-btn" class="aerial-btn" title="Reset Timer" aria-label="Reset timer">RESET</button>
                         </div>
-                </section>
+                    </section>
+                </div>
             </div>
 
-            <!-- ARCHIVE SECTION -->
+            <!-- ARCHIVE SECTION (Full Width) -->
             <section class="glass-panel archive-container hidden" id="archive-section">
                 <h2 class="section-title">Successful Landings (<span id="landed-count">0</span>)</h2>
                 <ul id="archive-list"></ul>
@@ -107,7 +127,36 @@
         </main>
     </div>
 
-    <!-- 3. PROJECT LOGIC -->
+<!-- THE DRESSING ROOM: Task Edit Modal -->
+<div id="edit-modal" class="modal-overlay hidden">
+    <div class="glass-panel modal-content">
+        <h2 class="section-title">Edit Movement</h2>
+        <div class="task-entry-grid-vertical">
+            <div class="input-wrapper">
+                <label for="edit-act-input">Task Name</label>
+                <input type="text" id="edit-act-input">
+            </div>
+            <div class="input-group">
+                <span class="input-label-sm">Due</span>
+                <input type="date" id="edit-due-date">
+            </div>
+            <div class="input-group">
+                <span class="input-label-sm">Rank</span>
+                <select id="edit-priority-level">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button id="save-edit-btn" class="aerial-btn">UPDATE TASK</button>
+                <button id="close-modal-btn" class="aerial-btn" style="background: transparent;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- PROJECT LOGIC -->
     <script type="module" src="script.js"></script>
 </body>
 </html>

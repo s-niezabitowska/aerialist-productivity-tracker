@@ -8,6 +8,7 @@
     --accent-lavender: #ce93d8;
     --accent-peach: #ffccbc;
     --accent-green: #81c784;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -60,17 +61,29 @@ body {
     display: flex;
     flex-direction: row;
     gap: 30px;
-    align-items: stretch;
+    align-items: flex-start; 
 }
 
-.acts-container { flex: 1.5; }
-.timer-container { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: flex-start; /* Aligns the H2 and controls to the left */
-    justify-content: flex-start; 
+.acts-container {
+    flex: 1.5; 
+}
+
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligns the H2 Title to the left border */
     text-align: left;
+    width: 100%;
+}
+
+.control-wing {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    /* This ensures a consistent 30px gap between Create Task and Timer */
+    gap: 30px; 
+    position: sticky;
+    top: 30px; 
 }
 
 .glass-panel {
@@ -113,12 +126,122 @@ body {
 /* TASK LIST ITEMS */
 #act-list, #archive-list { list-style: none; }
 
-.act-item {
+.task-entry-container {
+    padding: 30px 40px;
+}
+
+.task-entry-grid {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Name takes space, meta stays right */
+    gap: 20px;
+    align-items: end;
+}
+
+.task-entry-grid-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Consistent spacing between input rows */
+}
+
+#add-task-btn.mini {
+    margin-top: 10px; 
+    width: 100%;
+    /* Standardize font size to match timer buttons */
+    font-size: 0.75rem; 
+    padding: 12px 20px;
+    letter-spacing: 0.1rem;
+    font-weight: 400;
+}
+
+.meta-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+}
+
+/* Add a prefix to the date/priority for clarity */
+.input-group {
     display: flex;
     align-items: center;
-    padding: 20px 0;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding-left: 12px;
+    flex: 1;
+}
+
+.input-label-sm {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+/* Unified styling for the actual input fields inside groups */
+#due-date, #priority-level {
+    background: transparent; /* Remove background since parent has it */
+    border: none;
+    padding: 10px 8px;
+    width: 100%;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+
+.aerial-btn.mini {
+    margin-top: 0;
+    padding: 8px 20px;
+    font-size: 1.2rem;
+}
+
+.act-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: var(--transition);
+}
+
+.act-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    align-items: center;
+}
+
+.act-priority-badge {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 600; /* Bolder weight for better legibility */
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    color: var(--text-main); /* Using the dark brown for all badges[cite: 20] */
+}
+
+/* Individual badge backgrounds[cite: 20] */
+.priority-high .act-priority-badge { 
+    background: #ffcdd2; /* A slightly softer red that pairs better with dark text */
+    border: 1px solid #ef9a9a; 
+}
+
+.priority-medium .act-priority-badge { 
+    background: var(--accent-peach); 
+    border: 1px solid #ffab91;
+}
+
+.priority-low .act-priority-badge { 
+    background: #e1bee7; /* Soft lavender[cite: 20] */
+    border: 1px solid var(--accent-lavender);
+}
+
+.act-date-badge {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    font-weight: 300;
 }
 
 #spotlight-area .act-item {
@@ -141,9 +264,12 @@ body {
 }
 
 .archived-item {
-    opacity: 0.4;
-    filter: grayscale(0.6);
-    padding: 15px 0 !important;
+    opacity: 0.6;
+    filter: grayscale(0.4);
+    padding: 15px 20px !important;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 8px;
+    border-radius: 15px;
 }
 
 .archived-item .act-title {
@@ -177,7 +303,7 @@ body {
 
 .act-actions { display: flex; gap: 12px; }
 
-.focus-btn, .land-btn, .complete-btn {
+.focus-btn, .land-btn, .complete-btn, .edit-btn {
     background: white;
     border: 1px solid rgba(93, 64, 55, 0.1);
     border-radius: 50%;
@@ -194,21 +320,49 @@ body {
 .complete-btn:hover { color: var(--accent-green); border-color: var(--accent-green); background: #f1f8f1; transform: scale(1.1); }
 .focus-btn:hover { color: var(--accent-lavender); border-color: var(--accent-lavender); transform: scale(1.1); }
 .land-btn:hover { color: #d84315; border-color: var(--accent-peach); background: #fff8f6; }
+.edit-btn:hover {
+    color: var(--accent-lavender);
+    border-color: var(--accent-lavender);
+    transform: scale(1.1);
+}
 
 .aerial-btn {
     background: white;
     border: 1px solid var(--glass-border);
-    padding: 12px 35px;
     border-radius: 50px;
     font-family: inherit;
-    font-weight: 300;
-    letter-spacing: 0.2rem;
+    color: var(--text-main);
     cursor: pointer;
-    transition: 0.5s;
-    margin-top: 20px;
+    transition: var(--transition);
+    text-transform: uppercase;
 }
 
-.aerial-btn:hover { letter-spacing: 0.3rem; background: var(--accent-peach); }
+.aerial-btn:hover {
+    background: var(--accent-peach);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.undo-btn {
+    background: white;
+    border: 1px solid rgba(93, 64, 55, 0.1);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-main);
+}
+
+.undo-btn:hover {
+    color: var(--accent-lavender);
+    border-color: var(--accent-lavender);
+    background: #fdfbff;
+    transform: rotate(-45deg) scale(1.1);
+}
 
 /* ANIMATIONS */
 .landing {
@@ -256,10 +410,18 @@ body {
     transform: translateY(-1px);
 }
 
+#start-btn, #reset-btn {
+    font-size: 0.75rem; /* Ensure these match the 'Add Task' button */
+    padding: 12px 25px;
+    letter-spacing: 0.1rem;
+    margin-top: 10px; /* Consistent spacing from the clock */
+}
+
 .timer-controls {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
 }
 
 /* Make the reset button slightly more subtle if you like */
@@ -288,9 +450,14 @@ body {
 }
 
 @media (max-width: 850px) {
-    .lower-stage { flex-direction: column; }
+    .task-entry-grid {
+        grid-template-columns: 1fr; /* Stack on mobile */
+    }
+    .timer-container {
+        flex: 1; /* Allow stretching again on mobile stacks */
+        width: 100%;
+    }
 }
-
 .timer-container.active-flight {
     box-shadow: 0 0 30px rgba(206, 147, 216, 0.4);
     border-color: var(--accent-lavender);
@@ -342,4 +509,108 @@ body {
 
 #spotlight-area .act-item {
     animation: spotlight-pulse 3s infinite ease-in-out;
+}
+
+/* MODAL OVERLAY */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(93, 64, 55, 0.2); /* Tinted to match your text color */
+    backdrop-filter: blur(12px); /* Deeper blur for focus */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    width: 95%;
+    max-width: 480px;
+    padding: 50px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.45); /* Brighter for "active" focus */
+    box-shadow: 0 40px 80px rgba(93, 64, 55, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.modal-content .task-entry-grid-vertical {
+    gap: 20px; /* More space between rows */
+}
+
+.modal-content label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    opacity: 0.6;
+    margin-bottom: 8px;
+    display: block;
+    padding-left: 5px;
+}
+
+/* Modal-specific input overrides for height and font */
+#edit-act-input, 
+.modal-content .input-group {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 12px 18px;
+    transition: var(--transition);
+}
+
+#edit-act-input:focus {
+    background: white;
+    border-color: var(--accent-lavender);
+    box-shadow: 0 0 0 4px rgba(206, 147, 216, 0.1);
+}
+
+/* Remove default browser borders on fields inside the groups */
+.modal-content input[type="date"], 
+.modal-content select {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    width: 100%;
+    cursor: pointer;
+    appearance: none; /* Removes default dropdown arrows */
+}
+
+/* Specific fix for the date icon alignment */
+.modal-content input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    filter: sepia(100%) saturate(200%) brightness(50%) hue-rotate(330deg); /* Color match to text-main */
+}
+
+/* Modal Action Buttons */
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+#save-edit-btn {
+    flex: 2;
+    background: white;
+    border: none;
+    font-weight: 400;
+    font-size: 0.8rem;
+    padding: 15px;
+}
+
+#close-modal-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-border);
+    font-size: 0.8rem;
+    padding: 15px;
+}
+
+@keyframes modal-slide-up {
+    from { transform: translateY(40px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
 }
