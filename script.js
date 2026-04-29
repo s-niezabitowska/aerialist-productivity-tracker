@@ -1,13 +1,8 @@
 /**
- * Aerialist Logic: The Choreography of Tasks
- * Refactored for Modular Firebase Config
+ * Aerialist Logic: Updated for Accessibility & Custom Timer
  */
 
-// 1. MODULE IMPORTS
-// Import the initialized instances from your local config file
 import { auth, db } from './firebase-config.js';
-
-// Import the functional tools directly from the Firebase CDN[cite: 1, 2]
 import { 
     onAuthStateChanged, 
     signInWithEmailAndPassword, 
@@ -21,27 +16,21 @@ import {
     getDoc 
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-// 2. DOM ELEMENTS
+// DOM ELEMENTS
 const authOverlay = document.getElementById('auth-overlay');
 const mainDashboard = document.getElementById('main-dashboard');
 const authError = document.getElementById('auth-error');
 const userGreeting = document.getElementById('user-greeting');
-
-// Auth Inputs
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const firstNameInput = document.getElementById('first-name');
 const surnameInput = document.getElementById('surname');
 const signupFields = document.getElementById('signup-fields');
-
-// Auth Buttons
 const loginBtn = document.getElementById('login-btn');
 const signupToggle = document.getElementById('signup-toggle');
 const signupSubmit = document.getElementById('signup-submit');
 const backToLogin = document.getElementById('back-to-login');
 const logoutBtn = document.getElementById('logout-btn');
-
-// App Logic Elements
 const actInput = document.getElementById('act-input');
 const actList = document.getElementById('act-list');
 const spotlightArea = document.getElementById('spotlight-area');
@@ -51,16 +40,16 @@ const archiveSection = document.getElementById('archive-section');
 const landedCountDisplay = document.getElementById('landed-count');
 const timerDisplay = document.getElementById('timer-display');
 const startBtn = document.getElementById('start-btn');
+const resetBtn = document.getElementById('reset-btn');
 const timerContainer = document.querySelector('.timer-container');
+const customTimeBtn = document.getElementById('custom-time-btn'); // New Reference
 
-// 3. APP STATE
+// APP STATE
 let currentUser = null;
 let landedCount = 0;
 let acts = [];
 
-// 4. AUTHENTICATION & UI FLOW
-
-// The Observer: Manages the session and UI state[cite: 1]
+// AUTHENTICATION & UI FLOW[cite: 10]
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -90,7 +79,7 @@ function resetAppState() {
     renderActs();
 }
 
-// Signup/Login View Toggles
+// Signup/Login View Toggles[cite: 10]
 signupToggle.addEventListener('click', () => {
     signupFields.classList.remove('hidden');
     signupSubmit.classList.remove('hidden');
@@ -109,7 +98,7 @@ backToLogin.addEventListener('click', () => {
     document.getElementById('auth-title').innerText = "The Stage Door";
 });
 
-// Firebase Auth Actions
+// Firebase Auth Actions[cite: 10]
 loginBtn.addEventListener('click', async () => {
     try {
         await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
@@ -147,12 +136,10 @@ signupSubmit.addEventListener('click', async () => {
 
 logoutBtn.addEventListener('click', () => signOut(auth));
 
-// 5. CLOUD PERSISTENCE (Firestore)
-
+// CLOUD PERSISTENCE[cite: 10]
 async function saveState() {
     if (!currentUser) return;
     try {
-        // Update specific user document with current state[cite: 1]
         await setDoc(doc(db, "users", currentUser.uid), { 
             acts: acts, 
             landedCount: landedCount 
@@ -167,11 +154,9 @@ async function loadUserData(uid) {
         const docSnap = await getDoc(doc(db, "users", uid));
         if (docSnap.exists()) {
             const data = docSnap.data();
-            
             if (data.firstName && userGreeting) {
                 userGreeting.innerText = `Welcome, ${data.firstName}`;
             }
-
             acts = data.acts || [];
             landedCount = data.landedCount || 0;
             renderActs(); 
@@ -181,16 +166,13 @@ async function loadUserData(uid) {
     }
 }
 
-// 6. CORE TASK LOGIC
-
+// CORE TASK LOGIC[cite: 10]
 function renderActs() {
     actList.innerHTML = '';
     spotlightArea.innerHTML = '';
     archiveList.innerHTML = '';
     spotlightArea.appendChild(placeholder);
-
     acts.forEach((act, index) => createActElement(act, index));
-    
     landedCountDisplay.innerText = landedCount;
     if (landedCount > 0) archiveSection.classList.remove('hidden');
     updatePlaceholder();
@@ -199,10 +181,9 @@ function renderActs() {
 actInput.addEventListener('keypress', (e) => {
     const val = actInput.value.trim();
     if (e.key === 'Enter' && val !== "") {
-        const parts = val.split(':');
         acts.push({
-            text: parts.length > 1 ? parts[1].trim() : val,
-            statusText: parts.length > 1 ? parts[0].trim() : "ACTIVE",
+            text: val,
+            statusText: "ACTIVE",
             isFocused: false,
             isArchived: false
         });
@@ -212,6 +193,7 @@ actInput.addEventListener('keypress', (e) => {
     }
 });
 
+// ACCESSIBILITY UPDATE: Dynamic buttons now include ARIA labels[cite: 9, 10]
 function createActElement(act, index) {
     const li = document.createElement('li');
     li.className = 'act-item';
@@ -225,9 +207,9 @@ function createActElement(act, index) {
         </div>
         ${!act.isArchived ? `
         <div class="act-actions">
-            <button class="complete-btn" title="Complete">✓</button>
-            <button class="focus-btn" title="Focus">${act.isFocused ? '✦' : '✧'}</button>
-            <button class="land-btn" title="Remove">—</button>
+            <button class="complete-btn" title="Complete" aria-label="Mark task as complete">✓</button>
+            <button class="focus-btn" title="Focus" aria-label="${act.isFocused ? 'Remove focus' : 'Focus task'}">${act.isFocused ? '✦' : '✧'}</button>
+            <button class="land-btn" title="Remove" aria-label="Delete task">—</button>
         </div>` : ''}
     `;
 
@@ -269,7 +251,7 @@ function updatePlaceholder() {
     placeholder.classList.toggle('hidden', !!hasTask);
 }
 
-// 7. TIMER LOGIC
+// TIMER LOGIC
 let timer;
 let timeLeft = 25 * 60;
 let isRunning = false;
@@ -280,15 +262,34 @@ function updateTimerDisplay() {
     timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+// Preset button handlers
+document.querySelectorAll('.preset-btn[data-time]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (isRunning) return; // Prevent changing time during active flight
+        timeLeft = parseInt(btn.getAttribute('data-time')) * 60;
+        updateTimerDisplay();
+    });
+});
+
+// Custom time handler[cite: 9]
+customTimeBtn.addEventListener('click', () => {
+    if (isRunning) return;
+    const minutes = prompt("Enter custom duration (minutes):", "25");
+    if (minutes && !isNaN(minutes) && minutes > 0) {
+        timeLeft = Math.floor(parseFloat(minutes)) * 60;
+        updateTimerDisplay();
+    }
+});
+
 startBtn.addEventListener('click', () => {
     if (isRunning) {
         clearInterval(timer);
-        startBtn.textContent = "ASCEND";
+        startBtn.textContent = "START TIMER";
         timerContainer.classList.remove('active-flight');
         isRunning = false;
     } else {
         isRunning = true;
-        startBtn.textContent = "HALT";
+        startBtn.textContent = "PAUSE";
         timerContainer.classList.add('active-flight');
         timer = setInterval(() => {
             timeLeft--;
@@ -296,7 +297,7 @@ startBtn.addEventListener('click', () => {
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 new Audio('https://assets.mixkit.co/sfx/preview/mixkit-simple-notification-alert-2630.mp3').play();
-                startBtn.textContent = "ASCEND";
+                startBtn.textContent = "START TIMER";
                 timerContainer.classList.remove('active-flight');
                 timeLeft = 25 * 60;
                 updateTimerDisplay();
@@ -304,4 +305,18 @@ startBtn.addEventListener('click', () => {
             }
         }, 1000);
     }
+});
+
+resetBtn.addEventListener('click', () => {
+    // 1. Stop the clock
+    clearInterval(timer);
+    isRunning = false;
+    
+    // 2. Reset the state
+    startBtn.textContent = "START TIMER";
+    timerContainer.classList.remove('active-flight');
+    
+    // 3. Revert to 25 minutes (or your current default)
+    timeLeft = 25 * 60;
+    updateTimerDisplay();
 });

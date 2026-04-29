@@ -68,9 +68,9 @@ body {
     flex: 1; 
     display: flex; 
     flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center;
+    align-items: flex-start; /* Aligns the H2 and controls to the left */
+    justify-content: flex-start; 
+    text-align: left;
 }
 
 .glass-panel {
@@ -84,11 +84,14 @@ body {
 
 .section-title {
     margin-bottom: 25px;
-    font-weight: 200;
-    font-size: 0.8rem;
+    font-weight: 400; /* Increased from 200 for better definition */
+    font-size: 0.9rem; /* Slightly larger */
     text-transform: uppercase;
-    letter-spacing: 0.4rem;
-    opacity: 0.6;
+    letter-spacing: 0.2rem; /* Reduced from 0.4rem to bring letters together */
+    opacity: 0.85; /* Increased from 0.6 for better contrast */
+    color: var(--text-main);
+    border-left: 3px solid var(--accent-lavender); /* Adds a subtle visual anchor */
+    padding-left: 15px; /* Space for the new accent border */
 }
 
 /* SPOTLIGHT AREA */
@@ -224,11 +227,64 @@ body {
 /* INPUT & TIMER */
 #timer-display { font-size: 3.5rem; font-weight: 100; letter-spacing: -0.1rem; }
 
-#act-input {
-    width: 100%; background: transparent; border: none;
-    border-bottom: 1px solid var(--glass-border);
-    padding: 15px 0; font-family: inherit; font-size: 1.2rem; outline: none;
-    margin-bottom: 20px;
+#timer-display, .timer-presets, .timer-controls {
+    align-self: center; /* This overrides the parent's left alignment just for these items */
+    text-align: center;
+}
+
+/* Accessible Glass-Style Inputs */
+.input-wrapper input, #act-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.15); /* Subtle visible 'well' for accessibility */
+    border: 1px solid var(--glass-border);
+    border-radius: 12px; /* Soft edges match the panels */
+    padding: 14px 18px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 15px;
+}
+
+/* High-Contrast Focus State */
+.input-wrapper input:focus, #act-input:focus {
+    background: rgba(255, 255, 255, 0.4); /* Brightens to show active state */
+    border-color: var(--accent-lavender);
+    box-shadow: 0 0 0 3px rgba(206, 147, 216, 0.2); /* Focus ring for keyboard users */
+    transform: translateY(-1px);
+}
+
+.timer-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Make the reset button slightly more subtle if you like */
+#reset-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#reset-btn:hover {
+    background: var(--accent-peach);
+}
+
+/* Ensure placeholders are legible but distinct */
+::placeholder {
+    color: var(--text-main);
+    opacity: 0.5; /* Slightly higher opacity for better contrast */
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    max-width: 400px; /* Keeps the stage door centered and tidy */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (max-width: 850px) {
@@ -251,24 +307,30 @@ body {
     background: rgba(255, 255, 255, 0.3);
     border: 1px solid var(--glass-border);
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 45px;  /* Increased from 32px for better tap target */
+    height: 45px; /* Increased from 32px */
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: 1rem; /* Increased from 0.7rem */
+    font-weight: 300;
     color: var(--text-main);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .preset-btn:hover {
     background: var(--accent-lavender);
     color: white;
     border-color: white;
+    transform: scale(1.1); /* Slight pop on hover */
 }
 
-/* Style the custom button slightly differently */
+/* Specific adjustment for the pencil icon to make it stand out */
 #custom-time-btn {
-    font-size: 0.8rem;
+    font-size: 1.2rem; 
+    padding-bottom: 2px; /* Visual alignment for the glyph */
 }
 
 /* Add to style.css */
