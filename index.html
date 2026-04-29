@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aerialist | The Choreography of Tasks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 1. THE CURTAIN: Authentication Overlay -->
+    <div id="auth-overlay" class="glass-panel">
+        <header class="header">
+            <h1 class="logo">Aerialist</h1>
+            <p class="section-title" id="auth-title">The Stage Door</p>
+        </header>
+        
+        <div class="auth-form">
+            <!-- Registration Fields (First Name & Surname) -->
+            <div id="signup-fields" class="hidden">
+                <div class="input-wrapper">
+                    <input type="text" id="first-name" placeholder="First Name">
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="surname" placeholder="Surname">
+                </div>
+            </div>
+
+            <!-- Credentials -->
+            <div class="input-wrapper">
+                <input type="email" id="email" placeholder="Artist Email" required>
+            </div>
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="Passphrase" required>
+            </div>
+            
+            <div class="auth-actions">
+                <button id="login-btn" class="aerial-btn">ENTER</button>
+                <button id="signup-toggle" class="aerial-btn" style="background: transparent;">JOIN TROUPE</button>
+                <button id="signup-submit" class="aerial-btn hidden">REGISTER</button>
+            </div>
+
+            <p id="auth-error" class="hidden"></p>
+            <button id="back-to-login" class="hidden" style="background:none; border:none; color:var(--text-main); cursor:pointer; margin-top:10px;">Already an artist? Log in</button>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD: Branding Header & Content -->
+    <div class="dashboard-container hidden" id="main-dashboard">
+        <header class="header">
+            <h1 class="logo">Aerialist</h1>
+            <button id="logout-btn" class="logout-pill" title="Log out of your account">LOG OUT</button>
+        </header>
+
+        <main class="content">
+            <!-- NEW GREETING LOCATION: Left-aligned, above the spotlight -->
+            <p id="user-greeting" style="text-align: left; padding-left: 10px; margin-bottom: -15px;"></p>
+
+            <!-- SPOTLIGHT SECTION: The Current Movement -->
+            <section class="glass-panel spotlight-container">
+                <h2 class="section-title">The Spotlight</h2>
+                <div id="spotlight-area">
+                    <div id="spotlight-placeholder">
+                        <p>No act is currently center stage.</p>
+                        <span>Choose a movement below to begin.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- THE STAGE FLOOR: Interaction Area -->
+            <div class="lower-stage">
+                <!-- ACTIVE ACTS -->
+                <section class="glass-panel acts-container">
+                    <h2 class="section-title">Active Acts</h2>
+                    <div class="input-wrapper">
+                        <input type="text" id="act-input" placeholder="Prepare next movement...">
+                    </div>
+                    <ul id="act-list"></ul>
+                </section>
+
+                <!-- TIMER: In Flight Control -->
+                <section class="glass-panel timer-container">
+                    <h2 class="section-title">In Flight</h2>
+                    <div class="timer-presets">
+                        <button class="preset-btn" data-time="25">25</button>
+                        <button class="preset-btn" data-time="5">5</button>
+                        <button class="preset-btn" data-time="15">15</button>
+                        <button class="preset-btn" id="custom-time-btn" title="Set Custom Time">✎</button>
+                    </div>
+                    <div id="timer-display">25:00</div>
+                    <button id="start-btn" class="aerial-btn">ASCEND</button>
+                </section>
+            </div>
+
+            <!-- ARCHIVE SECTION: Successful Landings -->
+            <section class="glass-panel archive-container hidden" id="archive-section">
+                <h2 class="section-title">Successful Landings (<span id="landed-count">0</span>)</h2>
+                <ul id="archive-list"></ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- 3. PROJECT LOGIC -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
